@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Management;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace CpuInfoClient
 {
@@ -21,7 +24,6 @@ namespace CpuInfoClient
 				((sender, certificate, chain, sslPolicyErrors) => true);
 
 			Thread pollingThread = null;
-			CpuInfoService.CpuServiceClient serviceClient = null;
 
 			// Hello!
 			Console.WriteLine("CPU Info Client: Reporting your CPU usage today!");
@@ -35,12 +37,9 @@ namespace CpuInfoClient
 
 				_memUsageCounter = new PerformanceCounter("Memory", "Available KBytes");
 
-				// Create the service client
-				serviceClient = new CpuInfoService.CpuServiceClient();
-
 				// Create a new thread to start polling and sending the data
 				pollingThread = new Thread(new ParameterizedThreadStart(RunPollingThread));
-				pollingThread.Start(serviceClient);
+                pollingThread.Start();
 
 				Console.WriteLine("Press a key to stop and exit");
 				Console.ReadKey();
@@ -50,13 +49,11 @@ namespace CpuInfoClient
 				_running = false;
 
 				pollingThread.Join(5000);
-				serviceClient.Close();
 
 			}
 			catch (Exception)
 			{
 				pollingThread.Abort();
-				serviceClient.Abort();
 
 				throw;
 			}
@@ -65,7 +62,6 @@ namespace CpuInfoClient
 		static void RunPollingThread(object serviceClient)
 		{
 			// Convert the object that was passed in
-			var svc = serviceClient as CpuInfoService.CpuServiceClient;
 			DateTime lastPollTime = DateTime.MinValue;
 
 			Console.WriteLine("Started polling...");
@@ -83,7 +79,22 @@ namespace CpuInfoClient
 					GetMetrics(out cpuTime, out memUsage, out totalMemory);
 
 					// Send the data
-					svc.SendCpuReport(System.Environment.MachineName, cpuTime, memUsage, totalMemory);
+                    var postData = new
+                    {
+                        MachineName = System.Environment.MachineName,
+                        Processor = cpuTime,
+                        MemUsage = memUsage,
+                        TotalMemory = totalMemory
+                    };
+
+                    var json = JsonConvert.SerializeObject(postData);
+
+					// Post the data to the server
+                    var serverUrl = new Uri(ConfigurationManager.AppSettings["ServerUrl"]);
+
+                    var client = new WebClient();
+                    client.Headers.Add("Content-Type", "application/json");
+                    client.UploadString(serverUrl, json);
 
 					// Reset the poll time
 					lastPollTime = DateTime.Now;

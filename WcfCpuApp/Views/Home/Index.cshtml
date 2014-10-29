@@ -2,11 +2,11 @@
     ViewBag.Title = "Index";
 }
 
-<script type="text/javascript" src="/Scripts/jquery-1.6.4.js"></script>
-<script type="text/javascript" src="/Scripts/jquery.signalR-0.5.1.js"></script>
-<script type="text/javascript" src="/signalr/hubs"></script>
-<script type="text/javascript" src="/Scripts/knockout-2.1.0.js"></script>
-<script type="text/javascript" src="/Scripts/knockout.mapping-latest.js"></script>
+<script src="/Scripts/jquery-1.6.4.js"></script>
+<script src="Scripts/jquery.signalR-2.1.2.min.js"></script>
+<script src="/signalr/hubs"></script>
+<script src="/Scripts/knockout-2.1.0.js"></script>
+<script src="/Scripts/knockout.mapping-latest.js"></script>
 
 <style type="text/css">
     table {
@@ -27,6 +27,7 @@
 <div id="computerInfo">
 
     <h2>My Computer Info</h2>
+    <p data-bind="visible: connected">Connected to message hub</p>
 
     <table border="0">
         <tr>
@@ -56,11 +57,9 @@
     $(function () {
 
         var ViewModel = function () {
-
             var self = this;
-
+            self.connected = ko.observable(false);
             self.machines = ko.observableArray();
-
         };
 
         var vm = new ViewModel();
@@ -70,7 +69,7 @@
         var hub = $.connection.cpuInfo;
 
         // Add a handler to receive updates from the server
-        hub.cpuInfoMessage = function (machineName, cpu, memUsage, memTotal) {
+        hub.client.cpuInfoMessage = function (machineName, cpu, memUsage, memTotal) {
 
             var machine = {
                 machineName: machineName,
@@ -96,7 +95,9 @@
         };
 
         // Start the connectio
-        $.connection.hub.start();
+        $.connection.hub.start().done(function () {
+            vm.connected(true);
+        });
     });
 
 </script>

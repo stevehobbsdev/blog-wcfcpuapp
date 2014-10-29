@@ -1,4 +1,4 @@
-﻿using SignalR.Hubs;
+﻿using Microsoft.AspNet.SignalR;
 
 namespace WcfCpuApp.Hubs
 {
@@ -6,7 +6,7 @@ namespace WcfCpuApp.Hubs
     {
         public void SendCpuInfo(string machineName, double processor, int memUsage, int totalMemory)
         {
-            this.Clients.cpuInfoMessage(machineName, processor, memUsage, totalMemory);
+            this.Clients.All.cpuInfoMessage(machineName, processor, memUsage, totalMemory);
         }
     }
 }
