@@ -1,0 +1,102 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+
+<script type="text/javascript" src="/Scripts/jquery-1.6.4.js"></script>
+<script type="text/javascript" src="/Scripts/jquery.signalR-0.5.1.js"></script>
+<script type="text/javascript" src="/signalr/hubs"></script>
+<script type="text/javascript" src="/Scripts/knockout-2.1.0.js"></script>
+<script type="text/javascript" src="/Scripts/knockout.mapping-latest.js"></script>
+
+<style type="text/css">
+    table {
+        width: 700px;
+    }
+
+    body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 12px;
+    }
+
+    .highCpu {
+        background: red;
+        color: white;
+    }
+</style>
+
+<div id="computerInfo">
+
+    <h2>My Computer Info</h2>
+
+    <table border="0">
+        <tr>
+            <th>Machine</th>
+            <th>CPU %</th>
+            <th>Memory Available (Mb)</th>
+            <th>Total Memory (Mb)</th>
+            <th>Mem Available %</th>
+        </tr>
+
+        <!-- ko foreach: machines -->
+        <tr data-bind="css: { highCpu: cpu() > 90 }">
+            <td data-bind="text: machineName"></td>
+            <td data-bind="text: cpu"></td>
+            <td data-bind="text: memUsage"></td>
+            <td data-bind="text: memTotal"></td>
+            <td data-bind="text: memPercent"></td>
+        </tr>
+        <!-- /ko -->
+
+    </table>
+
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+
+        var ViewModel = function () {
+
+            var self = this;
+
+            self.machines = ko.observableArray();
+
+        };
+
+        var vm = new ViewModel();
+        ko.applyBindings(vm, $("#computerInfo")[0]);
+
+        // Get a reference to our hub
+        var hub = $.connection.cpuInfo;
+
+        // Add a handler to receive updates from the server
+        hub.cpuInfoMessage = function (machineName, cpu, memUsage, memTotal) {
+
+            var machine = {
+                machineName: machineName,
+                cpu: cpu.toFixed(0),
+                memUsage: (memUsage / 1024).toFixed(2),
+                memTotal: (memTotal / 1024).toFixed(2),
+                memPercent: ((memUsage / memTotal) * 100).toFixed(1) + "%"
+            };
+
+            var machineModel = ko.mapping.fromJS(machine);
+
+            // Check if we already have it:
+            var match = ko.utils.arrayFirst(vm.machines(), function (item) {
+                return item.machineName() == machineName;
+            });
+
+            if (!match)
+                vm.machines.push(machineModel);
+            else {
+                var index = vm.machines.indexOf(match);
+                vm.machines.replace(vm.machines()[index], machineModel);
+            }
+        };
+
+        // Start the connectio
+        $.connection.hub.start();
+    });
+
+</script>
