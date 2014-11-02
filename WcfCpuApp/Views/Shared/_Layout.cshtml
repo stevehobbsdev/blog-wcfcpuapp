@@ -1,0 +1,30 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Real-time Resource Monitor</title>
+
+    <link href="~/Content/bootstrap.min.css" type="text/css" rel="stylesheet" />
+
+    <script src="/Scripts/jquery-2.1.1.js"></script>
+    <script src="Scripts/jquery.signalR-2.1.2.min.js"></script>
+    <script src="/signalr/hubs"></script>
+    <script src="/Scripts/knockout-3.2.0.js"></script>
+    <script src="/Scripts/knockout.mapping-latest.js"></script>
+
+
+    @RenderSection("Scripts", false)
+
+</head>
+<body>
+    <div class="container"> 
+        @RenderBody()
+    </div>
+</body>
+</html>
