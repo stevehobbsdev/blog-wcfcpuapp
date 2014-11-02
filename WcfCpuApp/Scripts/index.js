@@ -1,12 +1,20 @@
 ﻿$(function () {
 
+    // The view model that is bound to our view
     var ViewModel = function () {
         var self = this;
+
+        // Whether we're connected or not
         self.connected = ko.observable(false);
+
+        // Collection of machines that are connected
         self.machines = ko.observableArray();
     };
 
+    // Instantiate the viewmodel..
     var vm = new ViewModel();
+
+    // .. and bind it to the view
     ko.applyBindings(vm, $("#computerInfo")[0]);
 
     // Get a reference to our hub
